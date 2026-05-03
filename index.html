@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head><title>Android Hacks Live</title><style>table{width:100%;border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px}th{background:#f2f2f2}</style></head>
+<body>
+<h1>Live Android CVEs (Fetches NVD)</h1>
+<table id="liveTable"><thead><tr><th>CVE</th><th>Severity</th><th>Description</th></tr></thead><tbody id="liveTableBody">
+<tr><td colspan="3">Loading...</td></tr>
+</tbody></table>
+
+<script>
+async function loadCVEs() {
+  // Proxy for CORS: allorigins.win
+  const url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch=android&resultsPerPage=10');
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const tbody = document.getElementById('liveTableBody');
+    tbody.innerHTML = '';
+    data.vulnerabilities.slice(0,10).forEach(vuln => {
+      const cve = vuln.cve.id;
+      const desc = vuln.cve.descriptions[0]?.value.slice(0,100) + '...' || 'N/A';
+      const sev = vuln.cve.metrics?.cvssMetricV31?.[0]?.cvssData?.baseSeverity || 'N/A';
+      tbody.innerHTML += `<tr><td>${cve}</td><td>${sev}</td><td>${desc}</td></tr>`;
+    });
+  } catch(e) {
+    document.getElementById('liveTableBody').innerHTML = '<tr><td colspan="3">Fallback: Check console/use static table</td></tr>';
+  }
+}
+loadCVEs();
+setInterval(loadCVEs, 300000);  // Refresh 5min
+</script>
+</body>
+</html>
